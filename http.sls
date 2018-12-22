@@ -1,7 +1,5 @@
 (library (tojoqk http)
-  (export http/get http/get->string http/get->json
-          http/post http/post->string http/post->json
-          http/post/json http/post/json->string http/post/json->json)
+  (export http/get http/post)
   (import (chezscheme)
           (tojoqk json)
           (srfi :115 regexp))
@@ -61,14 +59,6 @@
      [(url headers port ssl?)
       (http 'GET url headers port ssl? #f)]))
 
-  (define (http/get->string url . args)
-    (let-values ([(status-code headers body) (apply http/get url args)])
-      (values status-code headers (utf8->string body))))
-
-  (define (http/get->json url . args)
-    (let-values ([(status-code headers body) (apply http/get->string url args)])
-      (values status-code headers (string->json body))))
-
   (define http/post
     (case-lambda
      [(url data)
@@ -80,23 +70,6 @@
      [(url data headers port ssl?)
       (http 'POST url headers port ssl? data)]))
 
-  (define (http/post->string url data . args)
-    (let-values ([(status-code headers body) (apply http/post url data args)])
-      (values status-code headers (utf8->string body))))
-
-  (define (http/post->json url data . args)
-    (let-values ([(status-code headers body) (apply http/post->string url data args)])
-      (values status-code headers (string->json body))))
-
-  (define (http/post/json url data . args)
-    (apply http/post url (json->string data) args))
-
-  (define (http/post/json->string url data . args)
-    (apply http/post->string url (json->string data) args))
-
-  (define (http/post/json->json url data . args)
-    (apply http/post->json url (json->string data) args))
-
   (define (http method url headers port ssl? data)
     (let* ([url
             (cond
@@ -106,7 +79,7 @@
             (cond
              [(boolean? ssl?) ssl?]
              [else (assertion-violation 'http
-                          (format #f "'ssl?' must be boolean (~a)" ssl?))])]
+                                        (format #f "'ssl?' must be boolean (~a)" ssl?))])]
            [port
             (cond
              [(or (eq? port #f)
@@ -114,21 +87,21 @@
                        (< 0 port)))
               port]
              [else (assertion-violation 'http
-                          (format #f "port must be positive integer (~a)" port))])]
+                                        (format #f "port must be positive integer (~a)" port))])]
            [method
             (case method
               [(get GET) 'GET]
               [(post POST) 'POST]
               [else
                (assertion-violation 'http
-                      (format #f "yet implemented method ~a" method))])]
+                                    (format #f "yet implemented method ~a" method))])]
            [data
             (cond
              [(string? data) (string->utf8 data)]
              [(bytevector? data) data]
              [(not data) #f]
              [else (assertion-violation 'http
-                          (format #f "can't write data (~a)" data))])]
+                                        (format #f "can't write data (~a)" data))])]
            [headers
             (cond
              [(eq? headers #f) '()]
