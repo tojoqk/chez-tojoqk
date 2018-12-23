@@ -170,7 +170,8 @@
           (define (put-pair)
             (let ([pair (car sexp)])
               (cond
-               [(pair? pair)
+               [(and (pair? pair)
+                     (symbol? (car pair)))
                 (put-char out #\")
                 (put-string out (symbol->string (car pair)))
                 (put-char out #\")
