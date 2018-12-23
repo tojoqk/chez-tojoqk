@@ -1,8 +1,7 @@
 (library (tojoqk http)
   (export http/get http/post)
   (import (chezscheme)
-          (tojoqk json)
-          (srfi :115 regexp))
+          (tojoqk json))
 
   (define init
     (begin (load-shared-object "libcurl.so")))
@@ -192,20 +191,10 @@
              (foreign-callable-entry-point header-function))
             (values
              (lambda ()
-               (let ([string (utf8->string (get-output))]
-                     [header-format (rx "^([^:]*): *(.*)$")]
-                     [http-format (rx "^HTTP/")])
-                 (lambda (line)
-                   (cond
-                    [(regexp-matches header-format line)
-                     => (lambda (match-data)
-                          (cons (regexp-match-submatch match-data 1)
-                                (regexp-match-submatch match-data 2)))]
-                    [else
-                     (error 'http (format #f "illformed header (~a)" line))]))
-                 (filter (lambda (line)
-                           (not (regexp-matches http-format line)))
-                         (regexp-split "\r\n" string))))
+               (let ([str (utf8->string (get-output))])
+                 (filter values
+                         (map split-header
+                              (split-headers str)))))
              header-function))))
       (cond
        [(curl-easy-init)
@@ -241,4 +230,56 @@
                  (curl-slist-free-all slist)
                  (values status headers body))))]
        [else
-        (error 'http "can't init curl")]))))
+        (error 'http "can't init curl")])))
+
+  ;; for minimize librariy dependencies
+  (define (string-index str sep start)
+    (let ([len (string-length str)]
+          [p?
+           (cond
+            [(char? sep) (lambda (c)
+                           (char=? c sep))]
+            [(procedure? sep) sep]
+            [else (assertion-violation 'string-index
+                                       "must be char or predicate"
+                                       sep)])])
+      (let loop ([i start])
+        (cond
+         [(>= i len) #f]
+         [(p? (string-ref str i)) i]
+         [else (loop (+ i 1))]))))
+
+  (define (string-split str sep start count)
+    (define (make-last i)
+      (list (substring str i (string-length str))))
+    (let rec ([i 0]
+              [c 0])
+      (cond
+       [(and count (= count c)) (make-last i)]
+       [(string-index str sep i)
+        => (lambda (idx)
+             (cons (substring str i idx)
+                   (rec (+ idx 1) (+ c 1))))]
+       [else (make-last i)])))
+
+  (define (string-trim-left str c)
+    (let ([n (string-length str)])
+      (let loop ([i 0])
+        (cond
+         [(= i n) ""]
+         [(char=? c (string-ref str i))
+          (loop (+ i 1))]
+         [else
+          (substring str i (string-length str))]))))
+
+  (define (split-headers str)
+    (map (lambda (s)
+           (string-trim-left s #\newline))
+         (string-split str #\return 0 #f)))
+
+  (define (split-header str)
+    (let ([ss (string-split str #\: 0 1)])
+      (if (= 2 (length ss))
+          (cons (car ss)
+                (string-trim-left (cadr ss) #\space))
+          #f))))
