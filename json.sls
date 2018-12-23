@@ -57,8 +57,6 @@
 
   (define (%parse-object in fail)
     (let ([key (parse-string in fail)])
-      (write key)
-      (newline)
       (skip-whitespace in)
       (let ([value
              (let ([c (get-char in)])
