@@ -102,34 +102,34 @@
   (define (parse-string in fail)
     (get-char in)
     (call-with-string-output-port
-     (lambda (out)
-       (let loop ()
-         (let ([c (get-char in)])
-           (case c
-             [(#\") 'done]
-             [(#\\)
-              (let ([c (get-char in)])
-                (case c
-                  [(#\\ #\/) (put-char out c)]
-                  [(#\n) (put-char out #\newline)]
-                  [(#\t) (put-char out #\tab)]
-                  [(#\r) (put-char out #\return)]
-                  [(#\b) (put-char out #\backspace)]
-                  [(#\f) (put-char out #\x000c)]
-                  [(#\u)
-                   (let* ([s (get-string-n in 4)])
-                     (cond
-                      [(string->number s 16)
-                       => (lambda (n)
-                            (put-char out (integer->char s)))]
-                      [else (fail)]))]
-                  [else
-                   (put-char out #\\)
-                   (put-char out c)]))
-              (loop)]
-             [else
-              (put-char out c)
-              (loop)]))))))
+      (lambda (out)
+        (let loop ()
+          (let ([c (get-char in)])
+            (case c
+              [(#\") 'done]
+              [(#\\)
+               (let ([c (get-char in)])
+                 (case c
+                   [(#\\ #\/) (put-char out c)]
+                   [(#\n) (put-char out #\newline)]
+                   [(#\t) (put-char out #\tab)]
+                   [(#\r) (put-char out #\return)]
+                   [(#\b) (put-char out #\backspace)]
+                   [(#\f) (put-char out #\x000c)]
+                   [(#\u)
+                    (let* ([s (get-string-n in 4)])
+                      (cond
+                       [(string->number s 16)
+                        => (lambda (n)
+                             (put-char out (integer->char s)))]
+                       [else (fail)]))]
+                   [else
+                    (put-char out #\\)
+                    (put-char out c)]))
+               (loop)]
+              [else
+               (put-char out c)
+               (loop)]))))))
 
   (define (parse-number in fail)
     (cond
