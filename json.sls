@@ -171,9 +171,10 @@
             (let ([pair (car sexp)])
               (cond
                [(and (pair? pair)
-                     (symbol? (car pair)))
+                     (or (symbol? (car pair))
+                         (string? (car pair))))
                 (put-char out #\")
-                (put-string out (symbol->string (car pair)))
+                (display (car pair) out)
                 (put-char out #\")
                 (put-char out #\:)
                 (%json->string out (cdr pair) fail)]
