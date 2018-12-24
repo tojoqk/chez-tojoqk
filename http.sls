@@ -1,7 +1,6 @@
 (library (tojoqk http)
   (export http/get http/post)
-  (import (chezscheme)
-          (tojoqk json))
+  (import (chezscheme))
 
   (define init
     (begin (load-shared-object "libcurl.so")))
