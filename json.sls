@@ -135,19 +135,19 @@
     (cond
      [(string->number
        (call-with-string-output-port
-        (lambda (out)
-          (let loop ([decimal? #f])
-            (let ([c (peek-char in)])
-              (cond
-               [(char-degit? c)
-                (get-char in)
-                (put-char out c)
-                (loop decimal?)]
-               [(and (not decimal?) (char=? c #\.))
-                (get-char in)
-                (put-char out c)
-                (loop #t)]
-               [else 'done]))))))
+         (lambda (out)
+           (let loop ([decimal? #f])
+             (let ([c (peek-char in)])
+               (cond
+                [(char-degit? c)
+                 (get-char in)
+                 (put-char out c)
+                 (loop decimal?)]
+                [(and (not decimal?) (char=? c #\.))
+                 (get-char in)
+                 (put-char out c)
+                 (loop #t)]
+                [else 'done]))))))
       => (lambda (n) n)]
      [else (fail)]))
 
@@ -155,8 +155,8 @@
     (call/cc
      (lambda (fail)
        (call-with-string-output-port
-        (lambda (out)
-          (%json->string out sexp (lambda () (fail #f))))))))
+         (lambda (out)
+           (%json->string out sexp (lambda () (fail #f))))))))
 
   (define (%json->string out sexp fail)
     (cond
