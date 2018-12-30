@@ -1,6 +1,9 @@
 (library (tojoqk json)
-  (export string->json json->string)
+  (export string->json json->string json-null?)
   (import (rnrs))
+
+  (define (json-null? x)
+    (eq? x 'null))
 
   (define (string->json str)
     (let ([in (open-string-input-port str)])
@@ -41,6 +44,12 @@
         (parse-number in fail)]
        [(char=? c #\")
         (parse-string in fail)]
+       [(char-alphabetic? c)
+        (case (parse-symbol in fail)
+          [(true) #t]
+          [(false) #f]
+          [(null) 'null]
+          [else (fail)])]
        [else (fail)])))
 
   (define (parse-object in fail)
@@ -223,6 +232,12 @@
                    (inexact sexp)
                    sexp)
                out)]
+     [(boolean? sexp)
+      (if sexp
+          (put-string out "true")
+          (put-string out "false"))]
+     [(json-null? sexp)
+      (put-string out "null")]
      [else
       (fail)]))
   )
