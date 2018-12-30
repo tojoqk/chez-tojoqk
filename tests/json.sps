@@ -1,0 +1,30 @@
+(import (rnrs)
+        (srfi :64 testing)
+        (tojoqk json))
+
+(test-begin "string->json")
+(test-equal "empty" '() (string->json "{}"))
+(test-equal "singleton" '(("a" . "b")) (string->json "{\"a\": \"b\"}"))
+(test-equal "nested object"
+  '(("hello" . "world")
+    ("object" . (("key1" . "value1")
+                 ("key2" . "value2"))))
+  (string->json "{\"hello\": \"world\",
+                  \"object\" : {\"key1\" : \"value1\",
+                                \"key2\" :\"value2\"}}"))
+(test-error #t (string->json "{a: \"b\"}"))
+(test-error #t (string->json "{1902: \"b\"}"))
+(test-equal '#() (string->json "[]"))
+(test-equal '#("a" 1 #t #f) (string->json "[\"a\", 1, true, false]"))
+(test-equal 42 (string->json "42"))
+(test-equal "string" (string->json "\"string\""))
+(test-equal #t (string->json "true"))
+(test-equal #f (string->json "false"))
+(test-equal 'null (string->json "null"))
+(test-end)
+
+(test-begin "json->string")
+(test-equal "[\"a\",\"b\",\"c\"]" (json->string '#("a" "b" "c")))
+(test-equal "{\"hello\":\"world\"}" (json->string '(("hello" . "world"))))
+(test-error #t (json->string '((hello . "world"))))
+(test-end)
