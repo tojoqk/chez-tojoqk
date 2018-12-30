@@ -7,9 +7,8 @@
 
   (define (string->json str)
     (let ([in (open-string-input-port str)])
-      (call/cc
-       (lambda (fail)
-         (parse-json in (lambda () (fail #f)))))))
+      (parse-json in (lambda ()
+                       (error 'string->json "can't parse string" str)))))
 
   (define (char-degit? c)
     (case c
@@ -176,11 +175,11 @@
               [else 'done])))))))
 
   (define (json->string sexp)
-    (call/cc
-     (lambda (fail)
-       (call-with-string-output-port
-         (lambda (out)
-           (%json->string out sexp (lambda () (fail #f))))))))
+    (call-with-string-output-port
+      (lambda (out)
+        (%json->string out sexp
+                       (lambda ()
+                         (error 'json->string "can't convert string" sexp))))))
 
   (define (%json->string out sexp fail)
     (cond
