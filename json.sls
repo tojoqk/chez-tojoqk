@@ -157,8 +157,22 @@
                  (put-char out c)
                  (loop #t)]
                 [else 'done]))))))
-      => (lambda (n) n)]
+      => values]
      [else (fail)]))
+
+  (define (parse-symbol in fail)
+    (string->symbol
+     (call-with-string-output-port
+       (lambda (out)
+         (let loop ()
+           (let ([c (peek-char in)])
+             (cond
+              [(eof-object? c) 'done]
+              [(char-alphabetic? c)
+               (get-char in)
+               (put-char out c)
+               (loop)]
+              [else 'done])))))))
 
   (define (json->string sexp)
     (call/cc
