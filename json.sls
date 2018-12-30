@@ -148,6 +148,7 @@
            (let loop ([decimal? #f])
              (let ([c (peek-char in)])
                (cond
+                [(eof-object? c) 'done]
                 [(char-degit? c)
                  (get-char in)
                  (put-char out c)
