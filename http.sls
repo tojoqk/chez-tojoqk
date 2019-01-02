@@ -110,7 +110,8 @@
               (assertion-violation 'http "headers must be alist")])]
            [headers
             (cond
-             [data (cons (cons "Content-Length" (bytevector-length data)) headers)]
+             [(and data (not (assp (lambda (x) (string-ci=? "Content-Length" x)) headers)))
+              (cons (cons "Content-Length" (bytevector-length data)) headers)]
              [else headers])])
       (define (getinfo/status curl)
         (define l (make-ftype-pointer long (foreign-alloc (ftype-sizeof long))))
