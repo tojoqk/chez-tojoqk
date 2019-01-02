@@ -48,25 +48,25 @@
                        void))
   (define http/get
     (case-lambda
-     [(url)
-      (http/get url #f)]
-     [(url headers)
-      (http/get url headers #f)]
-     [(url headers port)
-      (http/get url headers port #f)]
-     [(url headers port ssl?)
-      (http 'GET url headers port ssl? #f)]))
+      [(url)
+       (http/get url #f)]
+      [(url headers)
+       (http/get url headers #f)]
+      [(url headers port)
+       (http/get url headers port #f)]
+      [(url headers port ssl?)
+       (http 'GET url headers port ssl? #f)]))
 
   (define http/post
     (case-lambda
-     [(url data)
-      (http/post url data #f)]
-     [(url data headers)
-      (http/post url data headers #f)]
-     [(url data headers port)
-      (http/post url data headers port #f)]
-     [(url data headers port ssl?)
-      (http 'POST url headers port ssl? data)]))
+      [(url data)
+       (http/post url data #f)]
+      [(url data headers)
+       (http/post url data headers #f)]
+      [(url data headers port)
+       (http/post url data headers port #f)]
+      [(url data headers port ssl?)
+       (http 'POST url headers port ssl? data)]))
 
   (define (http method url headers port ssl? data)
     (let* ([url
