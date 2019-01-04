@@ -78,7 +78,7 @@
   (define (aws/delete host service canonical-path queries headers)
     (aws "DELETE" host service canonical-path queries headers ""))
 
-  (define (aws method host service canonial-path queries headers payload)
+  (define (aws method host service canonical-path queries headers payload)
     (unless (current-access-key-id)
       (error 'authorize-headers "no access-key-id"))
     (unless (current-secret-access-key)
