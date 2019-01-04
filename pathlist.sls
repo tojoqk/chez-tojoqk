@@ -2,7 +2,6 @@
   (export pathlist
           pathlist-base
           pathlist-dir
-          pathlist-parent
           pathlist-append
           pathlist-map
           pathlist->unixpath)
