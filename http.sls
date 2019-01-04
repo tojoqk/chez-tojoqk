@@ -9,6 +9,7 @@
   (define CURLOPT_PORT 3)
   (define CURLOPT_POST 47)
   (define CURLOPT_PUT 54)
+  (define CURLOPT_VERBOSE 41)
   (define CURLOPT_USE_SSL 119)
   (define CURLOPT_HTTPHEADER 10023)
   (define CURLOPT_READDATA 10009)
@@ -111,8 +112,11 @@
            [headers
             (cond
              [(and data (not (assp (lambda (x) (string-ci=? "Content-Length" x)) headers)))
-              (cons (cons "Content-Length" (bytevector-length data)) headers)]
-             [else headers])])
+              (cons `("Content-Length" . ,(bytevector-length data))
+                    headers)]
+             [else headers])]
+           [headers
+            (cons `("Transfer-Encoding" . "") headers)])
       (define (getinfo/status curl)
         (define l (make-ftype-pointer long (foreign-alloc (ftype-sizeof long))))
         (unless (= (curl-easy-getinfo/int curl CURLINFO_RESPONSE_CODE
@@ -201,6 +205,7 @@
       (cond
        [(curl-easy-init)
         => (lambda (curl)
+;;             (curl-easy-setopt/long curl CURLOPT_VERBOSE 1)
              (curl-easy-setopt/string curl CURLOPT_URL url)
              (when port (curl-easy-setopt/long curl CURLOPT_PORT port))
              (case method
