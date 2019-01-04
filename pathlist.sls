@@ -4,7 +4,8 @@
           pathlist-dir
           pathlist-append
           pathlist-map
-          pathlist->unixpath)
+          pathlist->unixpath
+          unixpath->pathlist)
   (import (rnrs)
           (only (chezscheme) format)
           (only (tojoqk util string) string-split))
@@ -28,5 +29,8 @@
 
   (define (pathlist->unixpath path)
     (format "/~{~a~^/~}"  (reverse path)))
+
+  (define (unixpath->pathlist upath)
+    (string-split upath #\/))
   )
 
