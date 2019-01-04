@@ -79,7 +79,7 @@
                 (cond
                  [(eof-object? c) (fail)]
                  [(char=? c #\,)
-                  (parse-object in fail)]
+                  (%parse-object in fail)]
                  [(char=? c #\})
                   '()]
                  [else (fail)]))))))
