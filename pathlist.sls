@@ -1,7 +1,7 @@
 (library (tojoqk pathlist)
   (export pathlist
-          pathlist-parent
           pathlist-base
+          pathlist-dir
           pathlist-parent
           pathlist-append
           pathlist-map
@@ -16,7 +16,7 @@
   (define (pathlist-base path)
     (car path))
 
-  (define (pathlist-parent path)
+  (define (pathlist-dir path)
     (if (null? path)
         '()
         (cdr path)))
