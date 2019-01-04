@@ -3,7 +3,6 @@
   (import (chezscheme)
           (hashing sha-2)
           (tojoqk http)
-          (tojoqk pathlist)
           (tojoqk unstable aws common)
           (only (tojoqk util sexpr) single?)
           (only (tojoqk util string) string-split)
@@ -67,19 +66,19 @@
      [else
       (cons header headers)]))
 
-  (define (aws/get host service pathl queries headers)
-    (aws "GET" host service pathl queries headers ""))
+  (define (aws/get host service canonical-path queries headers)
+    (aws "GET" host service canonical-path queries headers ""))
 
-  (define (aws/post host service pathl queries headers payload)
-    (aws "POST" host service pathl queries headers payload))
+  (define (aws/post host service canonical-path queries headers payload)
+    (aws "POST" host service canonical-path queries headers payload))
 
-  (define (aws/put host service pathl queries headers payload)
-    (aws "PUT" host service pathl queries headers payload))
+  (define (aws/put host service canonical-path queries headers payload)
+    (aws "PUT" host service canonical-path queries headers payload))
 
-  (define (aws/delete host service pathl queries headers)
-    (aws "DELETE" host service pathl queries headers ""))
+  (define (aws/delete host service canonical-path queries headers)
+    (aws "DELETE" host service canonical-path queries headers ""))
 
-  (define (aws method host service pathl queries headers payload)
+  (define (aws method host service canonial-path queries headers payload)
     (unless (current-access-key-id)
       (error 'authorize-headers "no access-key-id"))
     (unless (current-secret-access-key)
@@ -98,7 +97,6 @@
                        ("Host" . ,host))
                      headers)]
            [signed-headers (make-signed-headers headers)]
-           [canonical-path (pathlist->unixpath pathl)]
            [canonical-uri
             (format "~a~a~:[~;?~]"
                     host canonical-path
