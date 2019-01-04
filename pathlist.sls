@@ -25,9 +25,9 @@
     (map f pl))
 
   (define (pathlist-append p1 p2)
-    (reverse (append p2 p1)))
+    (append p2 p1))
 
   (define (pathlist->unixpath path)
-    (format "/~{~a~^/~}"  path))
+    (format "/~{~a~^/~}"  (reverse path)))
   )
 
