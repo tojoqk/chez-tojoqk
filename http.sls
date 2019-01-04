@@ -1,5 +1,5 @@
 (library (tojoqk http)
-  (export http/get http/post)
+  (export http/get http/post http/put http/delete)
   (import (chezscheme))
 
   (define init
@@ -8,6 +8,7 @@
   (define CURLOPT_URL 10002)
   (define CURLOPT_PORT 3)
   (define CURLOPT_POST 47)
+  (define CURLOPT_PUT 54)
   (define CURLOPT_USE_SSL 119)
   (define CURLOPT_HTTPHEADER 10023)
   (define CURLOPT_READDATA 10009)
@@ -17,6 +18,7 @@
   (define CURLOPT_HEADERDATA 10029)
   (define CURLOPT_HEADERFUNCTION 20079)
   (define CURLINFO_RESPONSE_CODE 2097154)
+  (define CURLOPT_CUSTOMREQUEST 10036)
 
   (define curl-easy-init
     (foreign-procedure "curl_easy_init" () void*))
@@ -46,38 +48,36 @@
     (foreign-procedure "curl_slist_free_all"
                        (void*)
                        void))
+
   (define http/get
     (case-lambda
-      [(url)
-       (http/get url #f)]
-      [(url headers)
-       (http/get url headers #f)]
-      [(url headers port)
-       (http/get url headers port #f)]
-      [(url headers port ssl?)
-       (http 'GET url headers port ssl? #f)]))
+      [(url) (http/get url #f)]
+      [(url headers) (http/get url headers #f)]
+      [(url headers port) (http 'GET url headers port #f)]))
 
   (define http/post
     (case-lambda
-      [(url data)
-       (http/post url data #f)]
-      [(url data headers)
-       (http/post url data headers #f)]
-      [(url data headers port)
-       (http/post url data headers port #f)]
-      [(url data headers port ssl?)
-       (http 'POST url headers port ssl? data)]))
+      [(url data) (http/post url data #f)]
+      [(url data headers) (http/post url data headers #f)]
+      [(url data headers port) (http 'POST url headers port data)]))
 
-  (define (http method url headers port ssl? data)
+  (define http/put
+    (case-lambda
+      [(url data) (http/put url data #f)]
+      [(url data headers) (http/put url data headers #f)]
+      [(url data headers port) (http 'PUT url headers port data)]))
+
+  (define http/delete
+    (case-lambda
+      [(url) (http/delete url #f)]
+      [(url headers) (http/delete url headers #f)]
+      [(url headers port) (http 'DELETE url headers port #f)]))
+
+  (define (http method url headers port data)
     (let* ([url
             (cond
              [(string? url) url]
              [else (assertion-violation 'http (format #f "'url' must be sring (~a)" url))])]
-           [ssl?
-            (cond
-             [(boolean? ssl?) ssl?]
-             [else (assertion-violation 'http
-                                        (format #f "'ssl?' must be boolean (~a)" ssl?))])]
            [port
             (cond
              [(or (eq? port #f)
@@ -88,11 +88,11 @@
                                         (format #f "port must be positive integer (~a)" port))])]
            [method
             (case method
-              [(get GET) 'GET]
-              [(post POST) 'POST]
+              [(GET POST PUT DELETE) method]
               [else
-               (assertion-violation 'http
-                                    (format #f "yet implemented method ~a" method))])]
+               (assertion-violation
+                'http
+                (format #f "yet implemented method ~a" method))])]
            [data
             (cond
              [(string? data) (string->utf8 data)]
@@ -125,8 +125,10 @@
         #f)
       (define (post curl)
         (curl-easy-setopt/long curl CURLOPT_POST 1))
-      (define (use-ssl curl)
-        (curl-easy-setopt/long curl CURLOPT_USE_SSL 119))
+      (define (put curl)
+        (curl-easy-setopt/long curl CURLOPT_PUT 1))
+      (define (delete curl)
+        (curl-easy-setopt/string curl CURLOPT_CUSTOMREQUEST "DELETE"))
       (define (read-data curl)
         (let* ([in (open-bytevector-input-port data)]
                [read-function
@@ -200,11 +202,12 @@
        [(curl-easy-init)
         => (lambda (curl)
              (curl-easy-setopt/string curl CURLOPT_URL url)
-             (when ssl? (use-ssl curl))
              (when port (curl-easy-setopt/long curl CURLOPT_PORT port))
              (case method
                [(GET) (get curl)]
-               [(POST) (post curl)])
+               [(POST) (post curl)]
+               [(DELETE) (delete curl)]
+               [(PUT) (put curl)])
              (let-values
                  ([(get-body write-function) (write-data curl)]
                   [(get-headers header-function) (header-data curl)]
