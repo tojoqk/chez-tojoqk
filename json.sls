@@ -7,8 +7,15 @@
 
   (define (string->json str)
     (let ([in (open-string-input-port str)])
-      (parse-json in (lambda ()
-                       (error 'string->json "can't parse string" str)))))
+      (guard (con
+              ([(and (error? con)
+                     (eq? 'string->json (condition-who con)))
+                (apply error
+                       'string->json
+                       (condition-message con)
+                       (append (condition-irritants con)
+                               (list str)))]))
+        (parse-json in))))
 
   (define (char-degit? c)
     (case c
@@ -30,89 +37,97 @@
       (skip-whitespace in)]
      [else 'done]))
 
-  (define (parse-json in fail)
+  (define (parse-json in)
     (skip-whitespace in)
     (let ([c (peek-char in)])
+      (define (fail) (error 'string->json "parse-json error" c))
       (cond
        [(eof-object? c) (fail)]
        [(char=? c #\{)
-        (parse-object in fail)]
+        (parse-object in)]
        [(char=? c #\[)
-        (parse-array in fail)]
+        (parse-array in)]
        [(char-degit? c)
-        (parse-number in fail)]
+        (parse-number in)]
        [(char=? c #\")
-        (parse-string in fail)]
+        (parse-string in)]
        [(char-alphabetic? c)
-        (case (parse-symbol in fail)
+        (case (parse-symbol in)
           [(true) #t]
           [(false) #f]
           [(null) 'null]
           [else (fail)])]
        [else (fail)])))
 
-  (define (parse-object in fail)
+  (define (parse-object in)
     (get-char in)                       ; drop #\{
     (skip-whitespace in)
     (let ([c (peek-char in)])
+      (define (fail) (error 'string->json "parse-object error" c))
       (cond
        [(eof-object? c) (fail)]
        [(char=? c #\})
         (get-char in)
         '()]
        [else
-        (%parse-object in fail)])))
+        (%parse-object in)])))
 
-  (define (%parse-object in fail)
-    (let ([key (parse-string in fail)])
+  (define (%parse-object in)
+    (let ([key (parse-string in)])
       (skip-whitespace in)
       (let ([value
              (let ([c (get-char in)])
+               (define (fail)
+                 (error 'string->json "parse-object error" c))
                (cond
                 [(eof-object? c) (fail)]
                 [(char=? c #\:)
-                 (parse-json in fail)]
+                 (parse-json in)]
                 [else (fail)]))])
         (skip-whitespace in)
         (cons (cons key value)
               (let ([c (get-char in)])
+                (define (fail) (error 'string->json "parse-object error" c))
                 (cond
                  [(eof-object? c) (fail)]
                  [(char=? c #\,)
-                  (%parse-object in fail)]
+                  (%parse-object in)]
                  [(char=? c #\})
                   '()]
                  [else (fail)]))))))
 
-  (define (parse-array in fail)
+  (define (parse-array in)
     (get-char in)                       ; drop #\[
     (list->vector
      (let ([c (peek-char in)])
+       (define (fail) (error 'string->json "parse-array error" c))
        (cond
         [(eof-object? c) (fail)]
         [(char=? c #\]) '()]
         [else
-         (%parse-array in fail)]))))
+         (%parse-array in)]))))
 
-  (define (%parse-array in fail)
-    (let ([first (parse-json in fail)])
+  (define (%parse-array in)
+    (let ([first (parse-json in)])
       (skip-whitespace in)
       (let ([c (get-char in)])
+        (define (fail) (error 'string->json "parse-array error" c))
         (cons first
               (cond
                [(eof-object? c) (fail)]
                [(char=? c #\,)
-                (%parse-array in fail)]
+                (%parse-array in)]
                [(char=? c #\])
                 '()]
                [else (fail)])))))
 
-  (define (parse-string in fail)
+  (define (parse-string in)
     (get-char in)
     (call-with-string-output-port
       (lambda (out)
         (let loop ()
           (let ([c (get-char in)])
+            (define (fail) (error 'string->json "parse-string error" c))
             (case c
               [(#\") 'done]
               [(#\\)
@@ -139,33 +154,34 @@
                (put-char out c)
                (loop)]))))))
 
-  (define (parse-number in fail)
+  (define (parse-number in)
+    (define number/string
+      (call-with-string-output-port
+        (lambda (out)
+          (let loop ([decimal? #f])
+            (let ([c (peek-char in)])
+              (cond
+               [(eof-object? c) 'done]
+               [(char-degit? c)
+                (get-char in)
+                (put-char out c)
+                (loop decimal?)]
+               [(and (not decimal?) (char=? c #\.))
+                (get-char in)
+                (put-char out c)
+                (loop #t)]
+               [else 'done]))))))
     (cond
-     [(string->number
-       (call-with-string-output-port
-         (lambda (out)
-           (let loop ([decimal? #f])
-             (let ([c (peek-char in)])
-               (cond
-                [(eof-object? c) 'done]
-                [(char-degit? c)
-                 (get-char in)
-                 (put-char out c)
-                 (loop decimal?)]
-                [(and (not decimal?) (char=? c #\.))
-                 (get-char in)
-                 (put-char out c)
-                 (loop #t)]
-                [else 'done]))))))
-      => values]
-     [else (fail)]))
+     [(string->number number/string) => values]
+     [else (error 'string->json "parse-number error")]))
 
-  (define (parse-symbol in fail)
+  (define (parse-symbol in)
     (string->symbol
      (call-with-string-output-port
        (lambda (out)
          (let loop ()
            (let ([c (peek-char in)])
+             (define (fail) (error 'string->json "parse-symbol error" c))
              (cond
               [(eof-object? c) 'done]
               [(char-alphabetic? c)
