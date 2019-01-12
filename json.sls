@@ -73,6 +73,7 @@
         (%parse-object in)])))
 
   (define (%parse-object in)
+    (skip-whitespace in)
     (let ([key (parse-string in)])
       (skip-whitespace in)
       (let ([value
