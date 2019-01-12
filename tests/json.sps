@@ -27,6 +27,6 @@
 
 (test-begin "json->string")
 (test-equal "array" "[\"a\",\"b\",\"c\"]" (json->string '#("a" "b" "c")))
-(test-equal "object" "{\"hello\":\"world\",\"hello2:world2}" (json->string '(("hello" . "world") ("hello2" . "world2"))))
+(test-equal "object" "{\"hello\":\"world\",\"hello2\":\"world2\"}" (json->string '(("hello" . "world") ("hello2" . "world2"))))
 (test-error #t (json->string '((hello . "world"))))
 (test-end)
