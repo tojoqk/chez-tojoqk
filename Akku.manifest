@@ -1,9 +1,0 @@
-#!r6rs ; -*- mode: scheme; coding: utf-8 -*-
-(import (akku format manifest))
-
-(akku-package ("tojoqk" "0.0.0-alpha.0")
-  (synopsis "tojoqk's library")
-  (authors "Masaya Tojo")
-  (license "Apache License Version 2.0")
-  (depends ("chez-srfi" "^0.0.0-akku.63.23c1e35") ("hashing" "^1.2.0"))
-)
